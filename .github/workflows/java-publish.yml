@@ -56,6 +56,13 @@ jobs:
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Check glibc version outside docker
         run: ldd --version
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/java/lance-jni/.cargo/registry
+          key: ${{ runner.os }}-cargo-${{ matrix.arch }}-${{ hashFiles('java/lance-jni/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.arch }}-
       - name: Build and run in Debian 10 container
         run: |
           docker run --platform ${{ matrix.docker_platform }} -v ${{ github.workspace }}:/workspace -w /workspace debian:10 bash -c "
@@ -67,43 +74,44 @@ jobs:
             echo 'deb http://archive.debian.org/debian/ buster-updates main' >> /etc/apt/sources.list
             apt-get update
 
-            DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --assume-yes \
-              apt-transport-https \
-              ca-certificates \
-              curl \
-              gpg \
-              bash \
-              less \
-              openssl \
-              libssl-dev \
-              pkg-config \
-              libsqlite3-dev \
-              libsqlite3-0 \
-              libreadline-dev \
-              git \
-              cmake \
-              dh-autoreconf \
-              clang \
-              g++ \
-              libc++-dev \
-              libc++abi-dev \
-              libprotobuf-dev \
-              libncurses5-dev \
-              libncursesw5-dev \
-              libudev-dev \
-              libhidapi-dev \
-              zip \
+            DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --assume-yes \\
+              apt-transport-https \\
+              ca-certificates \\
+              curl \\
+              gpg \\
+              bash \\
+              less \\
+              openssl \\
+              libssl-dev \\
+              pkg-config \\
+              libsqlite3-dev \\
+              libsqlite3-0 \\
+              libreadline-dev \\
+              git \\
+              cmake \\
+              dh-autoreconf \\
+              clang \\
+              g++ \\
+              libc++-dev \\
+              libc++abi-dev \\
+              libprotobuf-dev \\
+              libncurses5-dev \\
+              libncursesw5-dev \\
+              libudev-dev \\
+              libhidapi-dev \\
+              zip \\
               unzip
 
             # https://github.com/databendlabs/databend/issues/8035
             PROTOC_ZIP=protoc-3.15.0-linux-${{ matrix.protoc_arch }}.zip
-            curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.15.0/\$PROTOC_ZIP
-            unzip -o \$PROTOC_ZIP -d /usr/local
-            rm -f \$PROTOC_ZIP
+            curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.15.0/\\$PROTOC_ZIP
+            unzip -o \\$PROTOC_ZIP -d /usr/local
+            rm -f \\$PROTOC_ZIP
             protoc --version
 
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
-            source \$HOME/.cargo/env
+            source \\$HOME/.cargo/env
+            export CARGO_HOME=/workspace/java/lance-jni/.cargo
             cargo --version
 
             cd java/lance-jni
@@ -170,8 +178,8 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
       - name: Copy native libs
         run: |
-          mkdir -p ./java/target/classes/nativelib/linux-x86-64 \
-            ./java/target/classes/nativelib/linux-aarch64 \
+          mkdir -p ./java/target/classes/nativelib/linux-x86-64 \\
+            ./java/target/classes/nativelib/linux-aarch64 \\
             ./java/target/classes/nativelib/darwin-aarch64
           cp ./liblance_jni_linux_x86_64.zip/liblance_jni.so ./java/target/classes/nativelib/linux-x86-64/liblance_jni.so
           cp ./liblance_jni_linux_arm_64.zip/liblance_jni.so ./java/target/classes/nativelib/linux-aarch64/liblance_jni.so
@@ -204,7 +212,7 @@ jobs:
         if: github.event_name == 'release' || inputs.mode == 'release'
         run: |
           unzip -q java/target/central-publishing/central-bundle.zip -d "$RUNNER_TEMP/maven"
-          aws s3 cp "$RUNNER_TEMP/maven/" "s3://$R2_BUCKET/" \
+          aws s3 cp "$RUNNER_TEMP/maven/" "s3://$R2_BUCKET/" \\
             --recursive --endpoint-url "$R2_ENDPOINT" --only-show-errors
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
