@@ -1,3 +1,11 @@
+# Optimized by ci-cost (https://github.com/mariotavarez/ci-cost)
+# Applied 4 optimizations:
+# - [HIGH] Add cargo dependency cache to "build-linux" job
+# - [HIGH] Add cargo dependency cache to "build-macos" job
+# - [MEDIUM] Add concurrency group to "java-publish.yml"
+# - [MEDIUM] 4 jobs clone the repo — consider artifact sharing
+# Estimated savings: ~19 min/run
+#
 name: Build and publish Java packages
 on:
   release:
@@ -24,6 +32,10 @@ on:
         required: false
         type: string
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 
